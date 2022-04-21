@@ -3,9 +3,8 @@ import { StyleSheet, View, TextInput, Text } from 'react-native';
 import React, { Component } from 'react';
 import Geolocation from '@react-native-community/geolocation';
 import axios from 'axios';
-import PlaceInput from '../components/PlaceInput.js'
+import PlaceInput from '@components/PlaceInput';
 
-const apiKey = 'AIzaSyCynyadVP6y0U3WS6-BTeJae2da6tDlMXE';
 export default class App extends Component {
 
   constructor(props) {
@@ -74,7 +73,7 @@ export default class App extends Component {
           }}
           showsUserLocation={true}
         >
-          <PlaceInput latitude={latitude} longitude={longitude} onPredictionPress={handlePredictionPress} />
+          <PlaceInput latitude={latitude} longitude={longitude} onPredictionPress={this.handlePredictionPress} /> 
         </MapView>
       </View>
     )
