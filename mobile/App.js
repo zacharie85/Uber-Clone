@@ -72,9 +72,9 @@ export default class App extends Component {
             longitudeDelta: 0.0121,
           }}
           showsUserLocation={true}
-        >
-          <PlaceInput latitude={latitude} longitude={longitude} onPredictionPress={this.handlePredictionPress} /> 
-        </MapView>
+        />
+           <PlaceInput latitude={latitude} longitude={longitude} onPredictionPress={this.handlePredictionPress} />  
+      
       </View>
     )
   }

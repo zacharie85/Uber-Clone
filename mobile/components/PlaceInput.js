@@ -68,10 +68,10 @@ const PlaceInput =({latitude,longitude,onPredictionPress,style}) =>{
     }
     return(
         <View style={container}>
-            <View style={inputContainer}>
+             <View style={inputContainer}> 
                 <TextInput style={input} value={place} onChangeText={handleChangeText} placeholder = 'Enter a location...'/>
-                {loading && <ActivityIndicator/>}                
-            </View>
+                {loading && <ActivityIndicator color={'black'}/>}                
+            </View> 
             {!loading && predictions.length > 0 ? renderPredictions():null}
         </View>
     )
@@ -80,7 +80,7 @@ const PlaceInput =({latitude,longitude,onPredictionPress,style}) =>{
 const styles = StyleSheet.create({
     container:{
     position:"absolute",
-    top:50,
+    marginTop:50,
     borderRadius:8,
     paddingHorizontal:10,
     width:width - 50,
@@ -90,6 +90,7 @@ const styles = StyleSheet.create({
     shadowOpacity:0.25,
     shadowRadius:3.84,
     elevation:5,
+    marginLeft:15
     },
     icon:{
         fontSize:25,
