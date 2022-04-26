@@ -1,9 +1,10 @@
 import React,{useState} from "react";
 import {View,StyleSheet,TextInput,Dimensions,ActivityIndicator,Keyboard} from "react-native";
-import {prefix,BASE_URL,API_KEY} from "./Helpers"
+import {prefix,BASE_URL,API_KEY} from "../utiles/Helpers"
 import axios from 'axios';
 import Prediction from "./Prediction";
 const {width,height} = Dimensions.get("window");
+import _ from 'lodash';
 
 const initialState = {
     place: "",
@@ -31,7 +32,6 @@ const PlaceInput =({latitude,longitude,onPredictionPress,style}) =>{
                             ...prevState,
                             predictions:[],
                             place:structured_formatting.main_text
-                            
                           }))
                           Keyboard.dismiss()
                     }}
