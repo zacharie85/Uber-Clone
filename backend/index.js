@@ -6,18 +6,26 @@ const io = require("socket.io")();
 io.listen(server);
 
 let taxiSocket =null;
+let passengerSocket =null;
 
 io.on("connection", socket =>{
     console.log("a user connected :D");
     socket.on("taxiRequest",routeResponse=>{
-        console.log(routeResponse)
-        if(taxiSocket != null){
+       passengerSocket = socket;
+        if(taxiSocket !== null){
             taxiSocket.emit("taxiRequest",routeResponse);
         }
     })
 
     socket.on("lockingForPassenger",msg=>{
         console.log('SommeOne locking for a passenger');
+        taxiSocket = socket;
+    })
+
+    socket.on("driverLocation",driverLocation=>{
+        console.log(driverLocation)
+        console.log('SommeOne locking for a taxi');
+        passengerSocket.emit("driverLocation",driverLocation);
         taxiSocket = socket;
     })
 })

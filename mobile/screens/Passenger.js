@@ -1,14 +1,15 @@
 import MapView, { PROVIDER_GOOGLE, Marker, Polyline } from 'react-native-maps'; // remove PROVIDER_GOOGLE import if not using Google Maps
-import { StyleSheet, View, Text, Keyboard, Dimensions, ActivityIndicator, TouchableWithoutFeedback, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, Keyboard, Dimensions, ActivityIndicator, TouchableWithoutFeedback, TouchableOpacity, Image } from 'react-native';
 import React, { Component } from 'react';
 import Geolocation from '@react-native-community/geolocation';
 import axios from 'axios';
 import PlaceInput from '@components/PlaceInput';
-import  SocketIO from 'socket.io-client';
+import SocketIO from 'socket.io-client';
 import { BASE_URL, API_KEY, prefix, getRoute, decodePoint } from '../utiles/Helpers'
 import MapViewDirections from 'react-native-maps-directions';
 
 const { width, height } = Dimensions.get('window');
+const car = require('../assets/images/car.png');
 
 export default class Passenger extends Component {
 
@@ -21,18 +22,13 @@ export default class Passenger extends Component {
             coordinates: [],
             destinationCoords: null,
             error: null,
-            routeResponse:null
+            routeResponse: null,
+            lockingForDriver: false,
+            driverIsOnTheWay: false,
+            driverLocation: null
         };
 
-        // this.onChangeDestinationDebounced = _.debounce(this.handlePredictionPress,1000)
     }
-
-    /* const mapView = React.useRef();
-    const [state, setState] = React.useState(initialState);
-    const [tap, setTap] = React.useState(false)
-    const { latitude, longitude, coordinates, destinationCoords } = state;
-    const [distance, setDistance] = React.useState(0.0);
-    const [minute, setMinute] = React.useState(0.0); */
 
     getUserLocation = () => {
         Geolocation.getCurrentPosition(
@@ -53,24 +49,30 @@ export default class Passenger extends Component {
     handlePredictionPress = async place_id => {
 
         try {
-           
+
             const url = `${BASE_URL}/directions/json?key=${API_KEY}&destination=place_id:${place_id}&origin=${this.state.latitude},${this.state.longitude}`
             const points = await getRoute(url);
             const coordinates = decodePoint(points);
 
             const {
-                data 
-              } = await axios.get(url);
-            
+                data
+            } = await axios.get(url);
+
             this.setState(prevState => ({
                 ...prevState,
                 coordinates,
                 destinationCoords: coordinates[coordinates.length - 1],
-                routeResponse:data
+                routeResponse: data
             }));
 
-            this.ref.fitToCoordinates(coordinates, 100000, {
+            this.ref.fitToCoordinates(coordinates, {
                 animated: true,
+                edgePadding:{
+                    top:20,
+                    bottom:20,
+                    left:20,
+                    right:20
+                }
             });
             //  setTap(true)
         } catch (error) {
@@ -78,20 +80,57 @@ export default class Passenger extends Component {
         }
     }
 
-    async requestDriver (){
+    async requestDriver() {
+        this.setState(prevState => ({
+            ...prevState,
+            lockingForDriver: true
+        }))
         const socket = SocketIO.connect("http://192.168.2.16:3000");
 
-        socket.on("connect",()=>{
+        socket.on("connect", () => {
             console.log("CLient connected");
-            socket.emit("taxiRequest",this.state.routeResponse)
+            socket.emit("taxiRequest", this.state.routeResponse)
         })
+
+        socket.on("driverLocation", (driverCoordinate) => {
+
+            const pointsCoords = [...this.state.coordinates,driverCoordinate]
+
+            this.ref.fitToCoordinates(pointsCoords, {
+                animated: true,
+                edgePadding:{
+                    top:20,
+                    bottom:20,
+                    left:20,
+                    right:20
+                }
+            });
+
+            this.setState(prevState => ({
+                ...prevState,
+                lockingForDriver: false,
+                driverIsOnTheWay: true,
+                driverLocation: driverCoordinate
+            }));
+
+        })
+
     }
 
     componentDidMount() {
         this.getUserLocation();
     }
     render() {
-        const { latitude, longitude, coordinates, destinationCoords } = this.state;
+        const { latitude, longitude, coordinates, destinationCoords, driverIsOnTheWay, driverLocation } = this.state;
+
+        let driverMarker = null;
+
+        if (driverIsOnTheWay) {
+            driverMarker = (<Marker coordinate={driverLocation}>
+                <Image source={car} style={{ width: 60, height: 60 }} />
+            </Marker>)
+        }
+
         if (!latitude || !longitude) {
             return (
                 <View style={styles.container}>
@@ -106,7 +145,7 @@ export default class Passenger extends Component {
                     <MapView
                         ref={(mapView) => this.ref = mapView}
                         style={styles.map}
-                        region={{
+                        initialRegion={{
                             latitude: latitude,
                             longitude: longitude,
                             latitudeDelta: 0.015,
@@ -120,7 +159,7 @@ export default class Passenger extends Component {
                         )}
                         {destinationCoords && (<View>
                             <Marker coordinate={destinationCoords} />
-
+                            {driverMarker}
                         </View>)}
 
                         <MapViewDirections
@@ -143,18 +182,19 @@ export default class Passenger extends Component {
                     </MapView>
                     <PlaceInput latitude={latitude} longitude={longitude} onPredictionPress={this.handlePredictionPress} />
                     {destinationCoords &&
-                    (  <TouchableOpacity style={{
-                        backgroundColor: 'black',
-                        justifyContent: 'center', marginTop: 'auto', margin: 20,
-                        padding: 15, paddingLeft: 30, paddingRight: 30, alignSelf: 'center'
-                    }} onPress={() => 
-                    this.requestDriver()
-                    }>
+                        (<TouchableOpacity style={{
+                            backgroundColor: 'black',
+                            justifyContent: 'center', marginTop: 'auto', margin: 20,
+                            padding: 15, paddingLeft: 30, paddingRight: 30, alignSelf: 'center'
+                        }} onPress={() =>
+                            this.requestDriver()
+                        }>
 
-                        <Text style={{ color: 'white' }}>FIND DRIVER</Text>
-                    </TouchableOpacity>)
+                            <Text style={{ color: 'white' }}>FIND DRIVER</Text>
+                            {this.state.lockingForDriver && (<ActivityIndicator animating={this.state.lockingForDriver} size="large" />)}
+                        </TouchableOpacity>)
                     }
-                  
+
 
                 </View>
 
@@ -168,8 +208,8 @@ export default class Passenger extends Component {
 const styles = StyleSheet.create({
     container: {
         ...StyleSheet.absoluteFillObject,
-        height: 700,
-        width: 400,
+        height: height,
+        width: width,
     },
     map: {
         ...StyleSheet.absoluteFillObject,
