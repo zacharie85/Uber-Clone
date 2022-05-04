@@ -31,7 +31,7 @@ export default class Passenger extends Component {
     }
 
     getUserLocation = () => {
-        Geolocation.getCurrentPosition(
+      this.watchId =   Geolocation.watchPosition(
             position => {
                 this.setState(prevState => ({
                     ...prevState,
@@ -85,7 +85,7 @@ export default class Passenger extends Component {
             ...prevState,
             lockingForDriver: true
         }))
-        const socket = SocketIO.connect("http://192.168.2.16:3000");
+        const socket = SocketIO.connect("http://192.168.2.15:3000");
 
         socket.on("connect", () => {
             console.log("CLient connected");
@@ -120,16 +120,21 @@ export default class Passenger extends Component {
     componentDidMount() {
         this.getUserLocation();
     }
+
+    componentWillUnmount(){
+        Geolocation.clearWatch(this.watchId)
+    }
+
     render() {
         const { latitude, longitude, coordinates, destinationCoords, driverIsOnTheWay, driverLocation } = this.state;
 
         let driverMarker = null;
 
-        if (driverIsOnTheWay) {
+      //  if (driverLocation) {
             driverMarker = (<Marker coordinate={driverLocation}>
                 <Image source={car} style={{ width: 60, height: 60 }} />
             </Marker>)
-        }
+      //  }
 
         if (!latitude || !longitude) {
             return (
@@ -158,7 +163,8 @@ export default class Passenger extends Component {
                                 coordinates={coordinates} strokeWidth={6} strokeColor="#0E70D1" />
                         )}
                         {destinationCoords && (<View>
-                            <Marker coordinate={destinationCoords} />
+                            <Marker
+                                 coordinate={destinationCoords} />
                             {driverMarker}
                         </View>)}
 
