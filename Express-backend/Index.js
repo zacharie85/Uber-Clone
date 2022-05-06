@@ -4,12 +4,16 @@ const bodyParser = require('body-parser');
 const PORT = 4000;
 const app = express();
 const MongoDBCOnnectionString = require('./config/mongodb');
-const UserRouter = require('./route/users');
+const UserRouter = require('./routes/users');
+const AuthRouter = require('./routes/auth');
+const AuthMiddleWare = require('./middleware/auth');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use("/users",UserRouter);
 
+app.use("/auth",AuthRouter);
+app.use("*",AuthMiddleWare);
+app.use("/users",UserRouter);
 
 mongose.connect(MongoDBCOnnectionString, { useNewUrlParser: true })
     .then(result => {
