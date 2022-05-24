@@ -85,7 +85,7 @@ export default class Passenger extends Component {
             ...prevState,
             lockingForDriver: true
         }))
-        const socket = SocketIO.connect("http://192.168.2.15:3000");
+        const socket = SocketIO.connect("http://192.168.0.148:3000");
 
         socket.on("connect", () => {
             console.log("CLient connected");

@@ -88,7 +88,7 @@ export default class Driver extends Component {
             lockingForpassenger: true,
             bottomText: "FIND PASSENGER"
         }))
-        this.socket = SocketIO.connect("http://192.168.2.15:3000");
+        this.socket = SocketIO.connect("http://192.168.0.148:3000");
 
         this.socket.on("connect", () => {
             console.log("Driver connected");

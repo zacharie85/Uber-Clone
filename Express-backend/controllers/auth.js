@@ -3,47 +3,58 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 
-exports.createUser = async (req, res) => {
+exports.createUser = async (req, res, next) => {
     try {
-        const {firstName,lastName,email,password} = req.body;
+        const { firstName, lastName, email, password } = req.body;
 
-        if(await User.findOne({email})){
-            return res.send(`this ${email} already exist !!`);
-        };
+        if (await User.findOne({ email })) {
+            const error = new Error(`this ${email} already exist !!`);
+            error.statusCode = 409;
+            throw error;
+        } else {
 
-        const haschedPassword = await bcrypt.hash(password,12);
+            const haschedPassword = await bcrypt.hash(password, 12);
 
-        const user = new User({firstName,lastName,email,password:haschedPassword});
+            const user = new User({ firstName, lastName, email, password: haschedPassword });
 
-      const result = await user.save();
-        res.send(result);
-    } catch (error) {
-        res.status(500).send(error)
+            const result = await user.save();
+            res.send(result);
+        }
+
+    } catch (err) {
+        next(err);
     }
 
 };
 
-exports.loginUser =async (req,res) =>{
-     const {email,password} = req.body;
+exports.loginUser = async (req, res, next) => {
+    try {
+        const { email, password } = req.body;
 
-    try{
-        const user = await User.findOne({email});
+        const user = await User.findOne({ email });
 
-        if(user){
+        if (user) {
 
-            const isPasswordCorest =await bcrypt.compare(password, user.password);
+            const isPasswordCorest = await bcrypt.compare(password, user.password);
 
-            if(isPasswordCorest){
+            if (isPasswordCorest) {
 
-                const token = jwt.sign(user.email,"MySuperSecretPassword");
+                const token = jwt.sign(user.email, "MySuperSecretPassword");
 
-               return res.json({token:token});
+                return res.json({ token: token });
             }
-           return res.send("Password dosnt match!");
+
+            const error = new Error(`Password dos not match email ${email}`);
+            error.statusCode= 401;
+            throw error;
+        } else {
+            const error = new Error(`this email ${email} does not exist`);
+            error.statusCode = 401;
+            throw error;
         }
 
-       return res.send("this email dosnt exist!");
-    }catch(error){
 
-    } 
+    } catch (err) {
+        next(err);
+    }
 }

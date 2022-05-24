@@ -28,10 +28,10 @@ export default class Loginform extends Component {
                     }}
                 />
 
-                <TouchableOpacity style={styles.bottom}>
+                <TouchableOpacity style={styles.bottom} onPress={this.props.handleSignIn}>
                     <Text style={styles.bottomText}> SIGN IN</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.bottom}>
+                <TouchableOpacity style={styles.bottom} onPress={this.props.handleSignUp}>
                     <Text style={styles.bottomText}>CREATE ACCOUNT</Text>
                 </TouchableOpacity>
             </View>
